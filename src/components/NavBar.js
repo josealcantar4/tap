@@ -45,8 +45,8 @@ const Navbar = () => {
         style={{
             fontWeight: "bold",
             color: "#171A4C",
-            wordWrap: "break-word",  // Esta propiedad asegura que el texto se divida si es necesario
-            whiteSpace: "normal",    // Permite que el texto se ajuste a varias líneas si es necesario
+            wordWrap: "break-word",
+            whiteSpace: "normal",
         }}
         >
         Bienvenido, {userEmail}
@@ -72,11 +72,6 @@ const Navbar = () => {
             <li className="nav-item">
               <Link className="nav-link" to="/productos">
                 Listado de Productos
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/crear-producto">
-                Registrar Producto
               </Link>
             </li>
             <li className="nav-item">
