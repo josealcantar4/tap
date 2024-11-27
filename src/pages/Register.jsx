@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { useNavigate } from "react-router-dom"; // Importa useNavigate
+import { getFirestore, collection, addDoc, Timestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +17,10 @@ const Register = () => {
   });
 
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Inicializa el hook
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const navigate = useNavigate();
+  const db = getFirestore();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +29,10 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.numeroEmpleado || !formData.nombre || !formData.apellidos || !formData.telefono || !formData.email || !formData.password || !formData.passwordConfirmation) {
+      setError("Todos los campos son obligatorios.");
+      return;
+    }
     if (formData.password !== formData.passwordConfirmation) {
       setError("Las contraseñas no coinciden.");
       return;
@@ -30,10 +40,36 @@ const Register = () => {
     try {
       const auth = getAuth();
       await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      alert("Usuario registrado exitosamente.");
-      navigate("/productos"); // Redirige a /productos
+
+      const userRef = collection(db, "usuarios");
+      await addDoc(userRef, {
+        numeroEmpleado: formData.numeroEmpleado,
+        nombre: formData.nombre,
+        apellidos: formData.apellidos,
+        telefono: formData.telefono,
+        email: formData.email,
+        fechaCreacion: Timestamp.fromDate(new Date()),
+      });
+
+      setModalMessage("Usuario registrado exitosamente.");
+      setShowModal(true);
+      setTimeout(() => {
+        setShowModal(false);
+        navigate("/productos");
+      }, 2000);
     } catch (err) {
-      setError(err.message);
+      let errorMessage = "Error en el registro.";
+      if (err.code === "auth/email-already-in-use") {
+        errorMessage = "El correo electrónico ya está registrado.";
+      } else if (err.code === "auth/weak-password") {
+        errorMessage = "La contraseña debe tener al menos 6 caracteres.";
+      } else if (err.code === "auth/invalid-email") {
+        errorMessage = "El correo electrónico no es válido.";
+      } else {
+        errorMessage = "Hubo un error desconocido, por favor intenta nuevamente.";
+      }
+      setModalMessage(errorMessage);
+      setShowModal(true);
     }
   };
 
@@ -166,6 +202,18 @@ const Register = () => {
           Iniciar Sesión
         </a>
       </form>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Registro</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{modalMessage}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

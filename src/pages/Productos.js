@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase/firebase";
 import { collection, getDocs, deleteDoc, doc, updateDoc, addDoc } from "firebase/firestore";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Alert } from "react-bootstrap";
 
 const Productos = () => {
   const [productos, setProductos] = useState([]);
@@ -16,6 +16,7 @@ const Productos = () => {
     seccion: "Tendencias",
     precio: "",
   });
+  const [error, setError] = useState(""); // Para manejar errores de validación
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -63,7 +64,25 @@ const Productos = () => {
     setShowModal(true);
   };
 
+  const validateForm = () => {
+    // Validar que los campos requeridos no estén vacíos
+    if (!formData.nombre || !formData.precio || !formData.imagenBase64) {
+      setError("Todos los campos son obligatorios, incluyendo la imagen.");
+      return false;
+    }
+
+    if (isNaN(formData.precio) || formData.precio <= 0) {
+      setError("El precio debe ser un número válido y mayor que cero.");
+      return false;
+    }
+
+    setError(""); // Limpiar el error si todo es válido
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return; // Si la validación falla, no continuar
+
     try {
       if (modalType === "edit" && selectedProduct) {
         // Lógica de actualización
@@ -74,7 +93,6 @@ const Productos = () => {
         await addDoc(collection(db, "productos"), { ...formData });
       }
 
-      // Refrescar la lista de productos después de crear o editar
       const querySnapshot = await getDocs(collection(db, "productos"));
       const productosArray = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -113,7 +131,8 @@ const Productos = () => {
         </select>
       </div>
       <button
-        className="btn btn-primary mb-3"
+        className="btn"
+        style={{ backgroundColor: "#FE926A", color: "white" }}
         onClick={() => handleOpenModal("create")}
       >
         Crear Producto
@@ -147,7 +166,8 @@ const Productos = () => {
               <td>{producto.seccion}</td>
               <td>
                 <button
-                  className="btn btn-sm btn-primary me-2"
+                  className="btn btn-sm"
+                  style={{ backgroundColor: "#916B65", color: "white" }}
                   onClick={() => handleOpenModal("edit", producto)}
                 >
                   Editar
@@ -179,85 +199,88 @@ const Productos = () => {
           {modalType === "delete" ? (
             <p>¿Estás seguro de que deseas eliminar este producto?</p>
           ) : (
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Nombre del producto</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={formData.nombre}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nombre: e.target.value })
-                  }
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Precio</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  value={formData.precio}
-                  onChange={(e) =>
-                    setFormData({ ...formData, precio: e.target.value })
-                  }
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Sección</Form.Label>
-                <Form.Select
-                  value={formData.seccion}
-                  onChange={(e) =>
-                    setFormData({ ...formData, seccion: e.target.value })
-                  }
-                >
-                  <option value="Tendencias">Tendencias</option>
-                  <option value="Pastelería">Pastelería</option>
-                  <option value="Panadería">Panadería</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Estado</Form.Label>
-                <Form.Select
-                  value={formData.estado}
-                  onChange={(e) =>
-                    setFormData({ ...formData, estado: e.target.value })
-                  }
-                >
-                  <option value="Disponible">Disponible</option>
-                  <option value="No activo">No activo</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Imagen del producto</Form.Label>
-                <Form.Control
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setFormData({
-                          ...formData,
-                          imagenBase64: reader.result,
-                        });
-                      };
-                      reader.readAsDataURL(file);
+            <>
+              {error && <Alert variant="danger">{error}</Alert>}
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label>Nombre del producto</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={formData.nombre}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
                     }
-                  }}
-                />
-                {formData.imagenBase64 && (
-                  <div className="mt-2">
-                    <img
-                      src={formData.imagenBase64}
-                      alt="Vista previa"
-                      style={{ width: "100px", height: "100px", objectFit: "cover" }}
-                    />
-                  </div>
-                )}
-              </Form.Group>
-            </Form>
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Precio</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={formData.precio}
+                    onChange={(e) =>
+                      setFormData({ ...formData, precio: e.target.value })
+                    }
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Sección</Form.Label>
+                  <Form.Select
+                    value={formData.seccion}
+                    onChange={(e) =>
+                      setFormData({ ...formData, seccion: e.target.value })
+                    }
+                  >
+                    <option value="Tendencias">Tendencias</option>
+                    <option value="Pastelería">Pastelería</option>
+                    <option value="Panadería">Panadería</option>
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Estado</Form.Label>
+                  <Form.Select
+                    value={formData.estado}
+                    onChange={(e) =>
+                      setFormData({ ...formData, estado: e.target.value })
+                    }
+                  >
+                    <option value="Disponible">Disponible</option>
+                    <option value="No activo">No activo</option>
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Imagen del producto</Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setFormData({
+                            ...formData,
+                            imagenBase64: reader.result,
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  {formData.imagenBase64 && (
+                    <div className="mt-2">
+                      <img
+                        src={formData.imagenBase64}
+                        alt="Vista previa"
+                        style={{ width: "100px", height: "100px", objectFit: "cover" }}
+                      />
+                    </div>
+                  )}
+                </Form.Group>
+              </Form>
+            </>
           )}
         </Modal.Body>
         <Modal.Footer>
@@ -272,9 +295,19 @@ const Productos = () => {
               Eliminar
             </Button>
           ) : (
-            <Button variant="primary" onClick={handleSubmit}>
-              {modalType === "create" ? "Crear" : "Guardar"}
-            </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            style={{
+              backgroundColor: modalType === "edit" ? "#FE926A" : "#FE926A",
+              outline: "none",
+              boxShadow: "none",
+              border: "none"
+            }}
+          >
+            {modalType === "create" ? "Crear" : modalType === "edit" ? "Editar" : "Guardar"}
+          </Button>
+
           )}
         </Modal.Footer>
       </Modal>
