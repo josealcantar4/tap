@@ -1,0 +1,20 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clonar código') {
+            steps {
+                git 'https://github.com/josealcantar4/tap'
+            }
+        }
+        stage('Instalar dependencias') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Construir aplicación') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+    }
+}
