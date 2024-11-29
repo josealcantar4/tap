@@ -32,7 +32,7 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light" style={{ backgroundColor: "#FE926A" }}>
       <div className="container-fluid">
-        <a className="navbar-brand">
+        <div className="navbar-brand">
           <img
             src="/favicon.ico"
             alt="Icono"
@@ -40,20 +40,18 @@ const Navbar = () => {
             height="50"
             className="d-inline-block align-text-top"
           />
-        <span
-        className="ms-3 fs-4 fs-sm-5 fs-md-6 fs-lg-7"
-        style={{
-            fontWeight: "bold",
-            color: "#171A4C",
-            wordWrap: "break-word",
-            whiteSpace: "normal",
-        }}
-        >
-        Bienvenido, {userEmail}
-        </span>
-
-
-        </a>
+          <span
+            className="ms-3 fs-4 fs-sm-5 fs-md-6 fs-lg-7"
+            style={{
+              fontWeight: "bold",
+              color: "#171A4C",
+              wordWrap: "break-word",
+              whiteSpace: "normal",
+            }}
+          >
+            Bienvenido, {userEmail}
+          </span>
+        </div>
 
         <button
           className="navbar-toggler"
@@ -88,6 +86,7 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
+
   );
 };
 
